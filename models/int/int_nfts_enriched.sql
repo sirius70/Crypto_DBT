@@ -1,6 +1,11 @@
 {{ config(materialized='incremental') }}
 
-with nfts as (
+with latest as (
+    select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) as max_ingested
+    from {{ this }}
+)
+
+, nfts as (
     select
         nft_id,
         name,
@@ -13,14 +18,9 @@ with nfts as (
         regexp_replace(h24_avg_sale_price, '[^0-9.]', '')::float as h24_avg_sale_usd,
         ingested_at
     from {{ ref('stg_trending_nfts') }}
+    {% if is_incremental() %}
+    where ingested_at > (select max_ingested from latest)
+    {% endif %}
 )
 
-select *
-from nfts
-
-{% if is_incremental() %}
-where ingested_at > (
-    select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz)
-    from {{ this }}
-)
-{% endif %}
+select * from nfts
