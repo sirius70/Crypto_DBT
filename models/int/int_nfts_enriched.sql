@@ -1,9 +1,11 @@
 {{ config(materialized='incremental') }}
 
+{% if is_incremental() %}
 with latest as (
     select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
     from {{ this }}
 )
+{% endif %}
 
 , nfts as (
     select
