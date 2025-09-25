@@ -4,9 +4,10 @@
 with latest as (
     select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
     from {{ this }}
-)
+),
+{% else %}
+with
 {% endif %}
-
 nfts as (
     select
         nft_id,
@@ -15,9 +16,9 @@ nfts as (
         native_currency,
         floor_price_native,
         floor_price_pct_24h,
-        regexp_replace(floor_price_str, '[^0-9.]', '')::float as floor_price_usd,
-        regexp_replace(h24_volume, '[^0-9.]', '')::float as h24_volume_usd,
-        regexp_replace(h24_avg_sale_price, '[^0-9.]', '')::float as h24_avg_sale_usd,
+        TO_NUMBER(REGEXP_REPLACE(floor_price_str, '[^0-9.]', '')) AS floor_price_usd,
+        TO_NUMBER(REGEXP_REPLACE(h24_volume, '[^0-9.]', '')) AS h24_volume_usd,
+        TO_NUMBER(REGEXP_REPLACE(h24_avg_sale_price, '[^0-9.]', '')) AS h24_avg_sale_usd,
         fetched_at,
         current_timestamp() as ingested_at
     from {{ ref('stg_trending_nfts') }}
