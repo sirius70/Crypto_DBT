@@ -1,36 +1,29 @@
 {{ config(materialized='incremental') }}
 
 with base as (
-  select
-    coin_id,
-    name,
-    symbol,
-    current_price,
-    price_change_pct_24h,
-    market_cap,
-    ingested_at
-  from {{ ref('int_coins_enriched') }}
+    select *
+    from {{ ref('int_coins_enriched') }}
+    {% if is_incremental() %}
+    where fetched_at > (
+        select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
+        from {{ this }}
+    )
+    {% endif %}
 )
 
-, ranked AS (
-  select
-    *,
-    row_number() over (partition by ingested_at order by abs(price_change_pct_24h) desc) as mover_rank
-  from base
+, ranked as (
+    select
+        coin_id,
+        name,
+        symbol,
+        current_price,
+        price_change_pct_24h,
+        market_cap_rank,
+        current_timestamp() as ingested_at,
+        row_number() over (order by abs(price_change_pct_24h) desc) as mover_rank
+    from base
 )
 
-select
-  coin_id,
-  name,
-  symbol,
-  current_price,
-  price_change_pct_24h,
-  market_cap,
-  ingested_at,
-  mover_rank
+select *
 from ranked
-where mover_rank <= 50
-
-{% if is_incremental() %}
-and ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
-{% endif %}
+where mover_rank <= 20

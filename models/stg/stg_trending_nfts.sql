@@ -3,24 +3,27 @@
 ) }}
 
 with raw as (
-    select data as v, meta, ingested_at
+    select 
+        data as v, 
+        meta:fetched_at::timestamp_ntz as fetched_at
     from {{ source('raw', 'raw_coins_trending') }}
 ),
 nfts as (
     select
-        nft.value:id::string                  as nft_id,
-        nft.value:name::string                as name,
-        nft.value:symbol::string              as symbol,
-        nft.value:nft_contract_id::int        as nft_contract_id,
-        nft.value:thumb::string               as image_thumb,
-        nft.value:native_currency_symbol::string as native_currency,
+        nft.value:id::string                       as nft_id,
+        nft.value:name::string                     as name,
+        nft.value:symbol::string                   as symbol,
+        nft.value:nft_contract_id::int             as nft_contract_id,
+        nft.value:thumb::string                    as image_thumb,
+        nft.value:native_currency_symbol::string   as native_currency,
         nft.value:floor_price_in_native_currency::float as floor_price_native,
         nft.value:floor_price_24h_percentage_change::float as floor_price_pct_24h,
-        nft.value:data:floor_price::string    as floor_price_str,
-        nft.value:data:h24_volume::string     as h24_volume,
+        nft.value:data:floor_price::string         as floor_price_str,
+        nft.value:data:h24_volume::string          as h24_volume,
         nft.value:data:h24_average_sale_price::string as h24_avg_sale_price,
-        nft.value:data:sparkline::string      as sparkline_url,
-        ingested_at
+        nft.value:data:sparkline::string           as sparkline_url,
+        fetched_at,
+        current_timestamp() as ingested_at
     from raw,
     lateral flatten(input => v:nfts) nft
 )
@@ -28,5 +31,8 @@ nfts as (
 select * from nfts
 
 {% if is_incremental() %}
-where ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
+where fetched_at > (
+    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
+    from {{ this }}
+)
 {% endif %}
