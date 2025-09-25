@@ -1,0 +1,24 @@
+name: 'crypto_realtime'
+version: '1.0.0'
+config-version: 2
+
+profile: 'crypto_profile'   # must match the profile name in ~/.dbt/profiles.yml
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+# Default configs
+models:
+  crypto_realtime:
+    # Staging layer
+    stg:
+      +materialized: view       # staging = views (lightweight, reusable)
+
+    # Intermediate layer
+    int:
+      +materialized: table      # intermediate = tables (persisted for re-use)
+
+    # Mart layer
+    mart:
+      +materialized: incremental  # marts = incremental (load only new data)
+      +on_schema_change: append_new_columns  # optional: keeps schema in sync
