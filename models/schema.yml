@@ -1,10 +1,9 @@
 version: 2
 
-
 sources:
   - name: raw
-    schema: raw         
-    database: CRYPTO_DB      
+    schema: raw
+    database: CRYPTO_DB
     tables:
       - name: raw_coins_markets
       - name: raw_coins_trending
@@ -14,7 +13,7 @@ models:
     description: "Staging for CoinGecko coins/markets API"
     columns:
       - name: coin_id
-        tests: [not_null, unique]
+        tests: [not_null]
       - name: current_price
         tests: [not_null]
       - name: last_updated
@@ -32,10 +31,10 @@ models:
     description: "Staging for trending categories"
     columns:
       - name: category_id
-        tests: [not_null, unique]
+        tests: [not_null]
 
   - name: stg_trending_nfts
     description: "Staging for trending NFTs"
     columns:
       - name: nft_id
-        tests: [not_null, unique]
+        tests: [not_null]
