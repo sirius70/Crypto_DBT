@@ -1,5 +1,9 @@
+{{ config(
+    materialized='incremental'
+) }}
+
 with raw as (
-    select data as v
+    select data as v, meta, ingested_at
     from {{ source('raw', 'raw_coins_trending') }}
 ),
 coins as (
@@ -23,9 +27,14 @@ coins as (
         coin.value:item:data:total_volume_btc::float as total_volume_btc,
         coin.value:item:data:sparkline::string as sparkline_url,
         coin.value:item:data:content:title::string as content_title,
-        coin.value:item:data:content:description::string as content_description
+        coin.value:item:data:content:description::string as content_description,
+        ingested_at
     from raw,
     lateral flatten(input => v:coins) coin
 )
 
 select * from coins
+
+{% if is_incremental() %}
+where ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
+{% endif %}
