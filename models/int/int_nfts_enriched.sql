@@ -7,7 +7,7 @@ with latest as (
 )
 {% endif %}
 
-, nfts as (
+nfts as (
     select
         nft_id,
         name,
