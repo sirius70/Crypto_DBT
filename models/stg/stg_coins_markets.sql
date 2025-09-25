@@ -1,5 +1,11 @@
+{{ config(
+    materialized='incremental'
+) }}
+
 with raw as (
-  select data as v
+  select data as v,
+  meta,
+  ingested_at
   from {{ source('raw', 'raw_coins_markets') }}
 )
 
@@ -31,5 +37,10 @@ select
     v:roi.currency::string                as roi_currency,
     v:roi.percentage::float               as roi_pct,
     v:roi.times::float                    as roi_times,
-    v:last_updated::timestamp_ntz         as last_updated
+    v:last_updated::timestamp_ntz         as last_updated,
+    ingested_at
 from raw
+
+{% if is_incremental() %}
+where ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
+{% endif %}

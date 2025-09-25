@@ -1,5 +1,9 @@
+{{ config(
+    materialized='incremental'
+) }}
+
 with raw as (
-    select data as v
+    select data as v, meta, ingested_at
     from {{ source('raw', 'raw_coins_trending') }}
 ),
 nfts as (
@@ -15,9 +19,14 @@ nfts as (
         nft.value:data:floor_price::string    as floor_price_str,
         nft.value:data:h24_volume::string     as h24_volume,
         nft.value:data:h24_average_sale_price::string as h24_avg_sale_price,
-        nft.value:data:sparkline::string      as sparkline_url
+        nft.value:data:sparkline::string      as sparkline_url,
+        ingested_at
     from raw,
     lateral flatten(input => v:nfts) nft
 )
 
 select * from nfts
+
+{% if is_incremental() %}
+where ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
+{% endif %}
