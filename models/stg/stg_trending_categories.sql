@@ -1,5 +1,6 @@
 {{ config(
-    materialized='incremental'
+    materialized='incremental',
+    unique_key=['category_id', 'fetched_at']  -- ensures safe upsert
 ) }}
 
 with raw as (
@@ -27,10 +28,3 @@ cats as (
 )
 
 select * from cats
-
-{% if is_incremental() %}
-where fetched_at > (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
-    from {{ this }}
-)
-{% endif %}
