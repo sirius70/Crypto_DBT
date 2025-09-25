@@ -7,7 +7,7 @@ with raw as (
     select 
         data as v, 
         meta:fetched_at::timestamp_ntz as fetched_at
-    from {{ source('raw', 'raw_trending_nfts') }}
+    from {{ source('raw', 'raw_coins_trending') }}
 ),
 nfts as (
     select
