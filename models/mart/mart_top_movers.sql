@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'ingested_at']  -- safe upsert
+    unique_key=['coin_id', 'ingested_at']  
 ) }}
 
 with base as (
