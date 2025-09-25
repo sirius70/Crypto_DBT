@@ -1,10 +1,9 @@
 version: 2
 
-
 sources:
   - name: raw
-    schema: raw         
-    database: CRYPTO_DB      
+    schema: raw
+    database: CRYPTO_DB
     tables:
       - name: raw_coins_markets
       - name: raw_coins_trending
