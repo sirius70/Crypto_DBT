@@ -1,14 +1,9 @@
-{{ config(materialized='incremental') }}
+{{ config(
+    materialized='incremental',
+    unique_key=['nft_id', 'fetched_at']  -- ensures safe upsert
+) }}
 
-{% if is_incremental() %}
-with latest as (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
-    from {{ this }}
-),
-{% else %}
-with
-{% endif %}
-nfts as (
+with nfts as (
     select
         nft_id,
         name,
@@ -22,9 +17,6 @@ nfts as (
         fetched_at,
         current_timestamp() as ingested_at
     from {{ ref('stg_trending_nfts') }}
-    {% if is_incremental() %}
-    where fetched_at > (select max_fetched from latest)
-    {% endif %}
 )
 
 select * from nfts

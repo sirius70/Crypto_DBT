@@ -1,5 +1,6 @@
 {{ config(
-    materialized='incremental'
+    materialized='incremental',
+    unique_key=['coin_id', 'fetched_at']
 ) }}
 
 with raw as (
@@ -37,10 +38,3 @@ coins as (
 )
 
 select * from coins
-
-{% if is_incremental() %}
-where fetched_at > (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
-    from {{ this }}
-)
-{% endif %}

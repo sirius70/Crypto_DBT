@@ -1,19 +1,11 @@
-{{ config(materialized='incremental') }}
+{{ config(
+    materialized='incremental',
+    unique_key=['coin_id', 'fetched_at']  -- ensures safe upsert
+) }}
 
-{% if is_incremental() %}
-with latest as (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
-    from {{ this }}
-),
-{% else %}
-with
-{% endif %}
-markets as (
+with markets as (
     select *
     from {{ ref('stg_coins_markets') }}
-    {% if is_incremental() %}
-    where fetched_at > (select max_fetched from latest)
-    {% endif %}
 ),
 trending as (
     select coin_id, score, fetched_at

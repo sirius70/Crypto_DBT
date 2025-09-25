@@ -1,5 +1,6 @@
 {{ config(
-    materialized='incremental'
+    materialized='incremental',
+    unique_key=['coin_id', 'fetched_at']   -- ensures no duplicates / safe upsert
 ) }}
 
 with raw as (
@@ -38,13 +39,6 @@ select
     v:roi.percentage::float               as roi_pct,
     v:roi.times::float                    as roi_times,
     v:last_updated::timestamp_ntz         as last_updated,
-    fetched_at,                           -- from raw/meta
-    current_timestamp() as ingested_at    -- stamped at load
+    fetched_at,
+    current_timestamp() as ingested_at
 from raw
-
-{% if is_incremental() %}
-where raw.fetched_at > (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
-    from {{ this }}
-)
-{% endif %}

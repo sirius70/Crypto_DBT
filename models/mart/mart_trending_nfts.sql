@@ -1,20 +1,13 @@
-{{ config(materialized='incremental') }}
+{{ config(
+    materialized='incremental',
+    unique_key=['nft_id', 'ingested_at']  -- safe upsert
+) }}
 
-{% if is_incremental() %}
-with latest as (
-    select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) as max_ingested
-    from {{ this }}
-),
-{% else %}
-with
-{% endif %}
-base as (
+with base as (
     select *
     from {{ ref('int_nfts_enriched') }}
-    {% if is_incremental() %}
-    where ingested_at > (select max_ingested from latest)
-    {% endif %}
 ),
+
 ranked as (
     select
         nft_id,
