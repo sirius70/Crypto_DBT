@@ -3,9 +3,9 @@
 ) }}
 
 with raw as (
-  select data as v,
-  meta,
-  ingested_at
+  select 
+    data as v,
+    meta:fetched_at::timestamp_ntz as fetched_at
   from {{ source('raw', 'raw_coins_markets') }}
 )
 
@@ -38,9 +38,13 @@ select
     v:roi.percentage::float               as roi_pct,
     v:roi.times::float                    as roi_times,
     v:last_updated::timestamp_ntz         as last_updated,
-    ingested_at
+    fetched_at,                           -- from raw/meta
+    current_timestamp() as ingested_at    -- stamped at load
 from raw
 
 {% if is_incremental() %}
-where ingested_at > (select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }})
+where raw.fetched_at > (
+    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
+    from {{ this }}
+)
 {% endif %}
