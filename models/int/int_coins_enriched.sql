@@ -7,7 +7,7 @@ with latest as (
 )
 {% endif %}
 
-, markets as (
+markets as (
     select *
     from {{ ref('stg_coins_markets') }}
     {% if is_incremental() %}
