@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['nft_id', 'fetched_at']  -- ensures safe upsert
+    unique_key=['nft_id', 'fetched_at']  
 ) }}
 
 with nfts as (

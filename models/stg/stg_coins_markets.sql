@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'fetched_at']   -- ensures no duplicates / safe upsert
+    unique_key=['coin_id', 'fetched_at'] 
 ) }}
 
 with raw as (

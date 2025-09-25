@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'fetched_at']  -- ensures safe upsert
+    unique_key=['coin_id', 'fetched_at'] 
 ) }}
 
 with markets as (
