@@ -2,7 +2,7 @@
 
 {% if is_incremental() %}
 with latest as (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
+    select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) as max_ingested
     from {{ this }}
 ),
 {% else %}
@@ -12,7 +12,7 @@ base as (
     select *
     from {{ ref('int_coins_enriched') }}
     {% if is_incremental() %}
-    where fetched_at > (select max_fetched from latest)
+    where ingested_at > (select max_ingested from latest)
     {% endif %}
 ),
 ranked as (
