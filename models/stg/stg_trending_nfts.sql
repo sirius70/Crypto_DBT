@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['nft_id', 'fetched_at', 'ingested_at'] 
+    unique_key=['nft_id', 'fetched_at'] 
 ) }}
 
 with raw as (
