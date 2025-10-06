@@ -4,18 +4,23 @@
     on_schema_change='sync_all_columns'
 ) }}
 
+-- 1. Compute last fetched in mart table
+with last_fetched as (
+    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched
+    from {{ this }}
+),
 
-with base as (
-    select *
-    from {{ ref('int_nfts_enriched') }}
+-- 2. Pull base rows from enriched table
+base as (
+    select n.*
+    from {{ ref('int_nfts_enriched') }} n
+    cross join last_fetched l
     {% if is_incremental() %}
-        where fetched_at > (
-            select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) 
-            from {{ this }}
-        )
+        where n.fetched_at > l.max_fetched
     {% endif %}
 ),
 
+-- 3. Rank NFTs
 ranked as (
     select
         nft_id,
@@ -29,6 +34,7 @@ ranked as (
     from base
 )
 
+-- 4. Only top 20
 select *
 from ranked
 where nft_rank <= 20
