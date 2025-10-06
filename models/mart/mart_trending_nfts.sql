@@ -1,16 +1,17 @@
 {{ config(
     materialized='incremental',
-    unique_key=['nft_id', 'fetched_at', 'ingested_at']  
+    unique_key=['nft_id', 'fetched_at', 'ingested_at']
 ) }}
 
 with base as (
     select *
     from {{ ref('int_nfts_enriched') }}
 
-{% if is_incremental() %}
-  where fetched_at > (select coalesce(max(fetched_at), '1970-01-01') from {{ this }})
-{% endif %}
-
+    {% if is_incremental() %}
+      where fetched_at > (
+          select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+      )
+    {% endif %}
 ),
 
 ranked as (
