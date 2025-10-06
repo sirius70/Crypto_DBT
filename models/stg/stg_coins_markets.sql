@@ -8,6 +8,11 @@ with raw as (
     data as v,
     meta:fetched_at::timestamp_ntz as fetched_at
   from {{ source('raw', 'raw_coins_markets') }}
+  {% if is_incremental() %}
+  where meta:fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 )
 
 select
@@ -42,7 +47,3 @@ select
     fetched_at,
     current_timestamp() as ingested_at
 from raw
-
-{% if is_incremental() %}
-  where ingested_at > (select max(ingested_at) from {{ this }})
-{% endif %}
