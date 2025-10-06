@@ -16,7 +16,7 @@ base as (
     from {{ ref('int_nfts_enriched') }} n
     cross join last_fetched l
     {% if is_incremental() %}
-        where n.fetched_at > l.max_fetched
+        where n."FETCHED_AT" > l.max_fetched
     {% endif %}
 ),
 
