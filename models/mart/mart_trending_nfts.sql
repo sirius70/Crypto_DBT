@@ -5,7 +5,7 @@
 ) }}
 
 
-base as (
+with base as (
     select *
     from {{ ref('int_nfts_enriched') }}
     {% if is_incremental() %}
@@ -13,7 +13,7 @@ base as (
       select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
   )
   {% endif %}
-)
+),
 
 ranked as (
     select
