@@ -4,13 +4,17 @@
     on_schema_change='sync_all_columns'
 ) }}
 
--- 1️⃣ Get last fetched_at from the current mart table
+-- Get last fetched_at from the current mart table
 with last_run as (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
-    from {{ this }}
+    {% if is_incremental() %}
+        select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
+        from {{ this }}
+    {% else %}
+        select '1970-01-01'::timestamp_ntz as max_fetched_at
+    {% endif %}
 ),
 
--- 2️⃣ Filter new data from intermediate layer
+-- Filter new data from intermediate layer
 base as (
     select *
     from {{ ref('int_coins_enriched') }}
@@ -19,7 +23,7 @@ base as (
     {% endif %}
 ),
 
--- 3️⃣ Rank movers and add ingestion timestamp
+-- Rank movers and add ingestion timestamp
 ranked as (
     select
         coin_id,
@@ -33,7 +37,7 @@ ranked as (
     from base
 )
 
--- 4️⃣ Final selection (top 20 movers)
+-- Final selection (top 20 movers)
 select *
 from ranked
 where mover_rank <= 20
