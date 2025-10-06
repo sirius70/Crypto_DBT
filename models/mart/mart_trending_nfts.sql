@@ -29,7 +29,7 @@ ranked as (
     from base
 )
 
--- Only top 20
+-- Only top 7
 select *
 from ranked
-where nft_rank <= 20
+where nft_rank <= 7
