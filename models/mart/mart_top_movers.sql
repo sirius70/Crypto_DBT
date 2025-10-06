@@ -1,20 +1,25 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'fetched_at', 'ingested_at']  
+    unique_key=['coin_id', 'fetched_at', 'ingested_at'],
+    on_schema_change='sync_all_columns'
 ) }}
 
-with base as (
-    select *
-    from {{ ref('int_coins_enriched') }}
-
-    {% if is_incremental() %}
-      where fetched_at > (
-          select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
-      )
-    {% endif %}
-
+-- 1️⃣ Get last fetched_at from the current mart table
+with last_run as (
+    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
+    from {{ this }}
 ),
 
+-- 2️⃣ Filter new data from intermediate layer
+base as (
+    select *
+    from {{ ref('int_coins_enriched') }}
+    {% if is_incremental() %}
+      where fetched_at > (select max_fetched_at from last_run)
+    {% endif %}
+),
+
+-- 3️⃣ Rank movers and add ingestion timestamp
 ranked as (
     select
         coin_id,
@@ -28,6 +33,7 @@ ranked as (
     from base
 )
 
+-- 4️⃣ Final selection (top 20 movers)
 select *
 from ranked
 where mover_rank <= 20
