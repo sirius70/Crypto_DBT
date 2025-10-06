@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['category_id', 'fetched_at'] 
+    unique_key=['category_id', 'fetched_at', 'ingested_at'] 
 ) }}
 
 with raw as (

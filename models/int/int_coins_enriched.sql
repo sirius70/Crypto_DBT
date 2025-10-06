@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'fetched_at'] 
+    unique_key=['coin_id', 'fetched_at', 'ingested_at'] 
 ) }}
 
 with markets as (
