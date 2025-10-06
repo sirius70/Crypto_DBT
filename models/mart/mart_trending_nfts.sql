@@ -4,23 +4,15 @@
     on_schema_change='sync_all_columns'
 ) }}
 
--- Get the last fetched_at from existing data
-with last_run as (
-    {% if is_incremental() %}
-        select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
-        from {{ this }}
-    {% else %}
-        select '1970-01-01'::timestamp_ntz as max_fetched_at
-    {% endif %}
-),
-
 
 base as (
     select *
     from {{ ref('int_nfts_enriched') }}
     {% if is_incremental() %}
-      where fetched_at > (select max_fetched_at from last_run)
-    {% endif %}
+        where fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 ),
 
 ranked as (

@@ -17,6 +17,11 @@ with nfts as (
         fetched_at,
         current_timestamp() as ingested_at
     from {{ ref('stg_trending_nfts') }}
+    {% if is_incremental() %}
+        where fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 )
 
 select * from nfts
