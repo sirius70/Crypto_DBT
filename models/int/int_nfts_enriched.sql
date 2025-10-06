@@ -1,6 +1,12 @@
 {{ config(
     materialized='incremental',
     unique_key=['nft_id', 'fetched_at', 'ingested_at']  
+
+{% if is_incremental() %}
+  where meta:fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 ) }}
 
 with nfts as (
