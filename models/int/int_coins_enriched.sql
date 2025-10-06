@@ -6,10 +6,20 @@
 with markets as (
     select *
     from {{ ref('stg_coins_markets') }}
+    {% if is_incremental() %}
+        where fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 ),
 trending as (
     select coin_id, score, fetched_at
     from {{ ref('stg_coins_trending') }}
+    {% if is_incremental() %}
+        where fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 ),
 categories as (
     select 
@@ -19,6 +29,11 @@ categories as (
         total_volume_usd, 
         fetched_at
     from {{ ref('stg_trending_categories') }}
+    {% if is_incremental() %}
+        where fetched_at::timestamp_ntz > (
+      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+  )
+  {% endif %}
 ),
 joined as (
     select
