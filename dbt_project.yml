@@ -12,7 +12,7 @@ models:
   crypto_realtime:
     # Staging layer
     stg:
-      +materialized: view       # staging = views (lightweight, reusable)
+      +materialized: incremental       # staging = views (lightweight, reusable)
 
     # Intermediate layer
     int:
