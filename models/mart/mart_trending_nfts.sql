@@ -24,7 +24,6 @@ ranked as (
         floor_price_usd,
         floor_price_pct_24h,
         h24_volume_usd,
-        fetched_at,
         current_timestamp() as ingested_at,
         row_number() over (order by floor_price_pct_24h desc) as nft_rank
     from base
