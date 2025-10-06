@@ -42,3 +42,7 @@ select
     fetched_at,
     current_timestamp() as ingested_at
 from raw
+
+{% if is_incremental() %}
+  where ingested_at > (select max(ingested_at) from {{ this }})
+{% endif %}
