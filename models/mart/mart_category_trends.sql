@@ -1,23 +1,29 @@
 {{ config(
     materialized='incremental',
-    unique_key=['category_name', 'fetched_at', 'ingested_at']  
+    unique_key=['category_name', 'fetched_at', 'ingested_at'],
+    on_schema_change='sync_all_columns'
 ) }}
 
-with base as (
-    select *
-    from {{ ref('int_coins_enriched') }}
-
-    {% if is_incremental() %}
-      where fetched_at > (
-          select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
-      )
-    {% endif %}
-
+-- Find the most recent fetched_at already loaded
+with last_run as (
+    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
+    from {{ this }}
 ),
 
+-- Pull only new records from intermediate model
+base as (
+    select *
+    from {{ ref('int_coins_enriched') }}
+    {% if is_incremental() %}
+      where fetched_at > (select max_fetched_at from last_run)
+    {% endif %}
+),
+
+-- Aggregate by category
 aggregated as (
     select
         category_name,
+        max(fetched_at) as fetched_at,  -- keep a reference to latest batch
         current_timestamp() as ingested_at,
         count(distinct coin_id) as num_coins,
         avg(price_change_pct_24h) as avg_daily_change,
@@ -27,4 +33,6 @@ aggregated as (
     group by category_name
 )
 
-select * from aggregated
+-- Final result
+select *
+from aggregated
