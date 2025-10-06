@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['category_name', 'fetched_at', 'ingested_at'],
+    unique_key=['category_name','ingested_at'],
     on_schema_change='sync_all_columns'
 ) }}
 
@@ -10,8 +10,8 @@ with base as (
     select *
     from {{ ref('int_coins_enriched') }}
     {% if is_incremental() %}
-        where fetched_at::timestamp_ntz > (
-      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
+        where ingested_at::timestamp_ntz > (
+      select coalesce(max(ingested_at), '1970-01-01'::timestamp_ntz) from {{ this }}
   )
   {% endif %}
 ),
