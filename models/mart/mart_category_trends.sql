@@ -6,9 +6,14 @@
 
 -- Find the most recent fetched_at already loaded
 with last_run as (
-    select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
-    from {{ this }}
+    {% if is_incremental() %}
+        select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) as max_fetched_at
+        from {{ this }}
+    {% else %}
+        select '1970-01-01'::timestamp_ntz as max_fetched_at
+    {% endif %}
 ),
+
 
 -- Pull only new records from intermediate model
 base as (
