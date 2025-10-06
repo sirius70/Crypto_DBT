@@ -8,10 +8,9 @@ with base as (
     from {{ ref('int_coins_enriched') }}
 
 {% if is_incremental() %}
-  where meta:fetched_at::timestamp_ntz > (
-      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
-  )
-  {% endif %}
+  where fetched_at > (select coalesce(max(fetched_at), '1970-01-01') from {{ this }})
+{% endif %}
+
 ),
 
 aggregated as (
