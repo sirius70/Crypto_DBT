@@ -5,7 +5,7 @@
 ) }}
 
 -- Pull base rows from enriched table
-base as (
+with base as (
     select *
     from {{ ref('int_nfts_enriched') }}
     cross join last_fetched l
