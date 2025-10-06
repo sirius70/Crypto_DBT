@@ -8,7 +8,6 @@
 with base as (
     select *
     from {{ ref('int_nfts_enriched') }}
-    cross join last_fetched l
     {% if is_incremental() %}
         where fetched_at::timestamp_ntz > (
       select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
