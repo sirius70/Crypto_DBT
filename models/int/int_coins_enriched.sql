@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['coin_id', 'fetched_at', 'ingested_at'] 
+    unique_key=['coin_id', 'fetched_at'] 
 
 {% if is_incremental() %}
   where meta:fetched_at::timestamp_ntz > (
