@@ -9,14 +9,14 @@ with base as (
         coin_id,
         coalesce(symbol, '') as symbol,
         coalesce(name, '') as name,
-        coalesce(current_price, 0) as current_price,
-        coalesce(market_cap, 0) as market_cap,
-        coalesce(market_cap_rank, 999999) as market_cap_rank,
-        coalesce(total_volume, 0) as total_volume,
-        coalesce(price_change_pct_24h, 0) as price_change_pct_24h,
-        coalesce(circulating_supply, 0) as circulating_supply,
-        coalesce(all_time_high, 0) as all_time_high,
-        coalesce(all_time_low, 0) as all_time_low,
+        coalesce(current_price, 0.00) as current_price,
+        coalesce(market_cap, 0.00) as market_cap,
+        coalesce(market_cap_rank, -1) as market_cap_rank,
+        coalesce(total_volume, 0.00) as total_volume,
+        coalesce(price_change_pct_24h, 0.00) as price_change_pct_24h,
+        coalesce(circulating_supply, 0.00) as circulating_supply,
+        coalesce(all_time_high, 0.00) as all_time_high,
+        coalesce(all_time_low, 0.00) as all_time_low,
         last_updated,
         fetched_at,
         current_timestamp() as ingested_at
@@ -35,9 +35,9 @@ with_prev as (
         symbol,
         name,
         current_price,
-        lag(current_price) over (
+        coalesce(lag(current_price) over (
             partition by coin_id order by fetched_at
-        ) as prev_price,
+        ),0.00) as prev_price,
         market_cap,
         market_cap_rank,
         total_volume,
@@ -54,11 +54,11 @@ with_prev as (
 select
     *,
     case
-        when prev_price is null then 0
+        when prev_price is null then 0.00
         else (current_price - prev_price)
     end as price_diff,
     case
-        when prev_price is null or prev_price = 0 then 0
+        when prev_price is null or prev_price = 0.00 then 0.00
         else ((current_price - prev_price) / prev_price) * 100
     end as price_change_pct_since_prev
 from with_prev
