@@ -39,4 +39,4 @@ ranked as (
 
 select *
 from ranked
-where mover_rank <= 20;
+where mover_rank <= 20

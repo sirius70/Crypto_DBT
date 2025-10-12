@@ -84,4 +84,3 @@ select
     s.total_trending_volume
 from metrics m
 left join summary s on m.fetched_at::date = s.trend_date
-;
