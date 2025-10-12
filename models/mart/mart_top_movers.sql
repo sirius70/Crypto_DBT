@@ -2,13 +2,13 @@
 
 {{ config(
     materialized = 'incremental',
-    unique_key = ['coin_id', 'ingested_at'],
+    unique_key = ['coin_id', 'fetched_at', 'ingested_at'],
     on_schema_change = 'sync_all_columns'
 ) }}
 
 with latest_batch as (
     -- Get latest ingested_at timestamp
-    select max(ingested_at) as latest_ingested_at
+    select max(fetched_at) as latest_fetched_at
     from {{ ref('int_coins_enriched') }}
 ),
 
@@ -27,7 +27,7 @@ filtered as (
         c.fetched_at,
         c.ingested_at
     from {{ ref('int_coins_enriched') }} c
-    where c.ingested_at = (select latest_ingested_at from latest_batch)
+    where c.fetched_at = (select latest_fetched_at from latest_batch)
 ),
 
 ranked as (
