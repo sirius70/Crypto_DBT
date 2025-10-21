@@ -28,6 +28,13 @@ with base as (
   {% endif %}
 ),
 
+combined as (
+    select * from base
+    {% if is_incremental() %}
+    union all
+    select * from {{ this }}
+    {% endif %}
+),
 
 with_prev as (
     select
@@ -48,17 +55,17 @@ with_prev as (
         fetched_at,
         last_updated,
         ingested_at
-    from base
+    from combined
 )
 
 select
     *,
     case
-        when prev_price is null then 0.00
-        else (current_price - prev_price)
+        when prev_price = 0.00 then 0.00
+        else current_price - prev_price
     end as price_diff,
     case
-        when prev_price is null or prev_price = 0.00 then 0.00
+        when prev_price = 0.00 then 0.00
         else ((current_price - prev_price) / prev_price) * 100
     end as price_change_pct_since_prev
 from with_prev
