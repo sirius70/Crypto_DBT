@@ -30,12 +30,26 @@ with base as (
     {% endif %}
 ),
 
--- include past data to allow window functions to work properly
 combined as (
     select * from base
     {% if is_incremental() %}
     union all
-    select * from {{ this }}
+    select
+        coin_id,
+        symbol,
+        name,
+        current_price,
+        market_cap,
+        market_cap_rank,
+        total_volume,
+        price_change_pct_24h,
+        circulating_supply,
+        all_time_high,
+        all_time_low,
+        last_updated,
+        fetched_at,
+        ingested_at
+    from {{ this }}
     {% endif %}
 ),
 
