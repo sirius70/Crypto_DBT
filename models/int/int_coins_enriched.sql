@@ -21,13 +21,16 @@ with base as (
         fetched_at,
         current_timestamp() as ingested_at
     from {{ ref('stg_coins_markets') }}
+
     {% if is_incremental() %}
         where fetched_at::timestamp_ntz > (
-      select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz) from {{ this }}
-  )
-  {% endif %}
+            select coalesce(max(fetched_at), '1970-01-01'::timestamp_ntz)
+            from {{ this }}
+        )
+    {% endif %}
 ),
 
+-- include past data to allow window functions to work properly
 combined as (
     select * from base
     {% if is_incremental() %}
@@ -42,9 +45,12 @@ with_prev as (
         symbol,
         name,
         current_price,
-        coalesce(lag(current_price) over (
-            partition by coin_id order by fetched_at
-        ),0.00) as prev_price,
+        coalesce(
+            lag(current_price) over (
+                partition by coin_id order by fetched_at
+            ),
+            0.00
+        ) as prev_price,
         market_cap,
         market_cap_rank,
         total_volume,
